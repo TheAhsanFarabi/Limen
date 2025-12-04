@@ -1,6 +1,7 @@
 import os
 import base64
 import streamlit as st
+import mimetypes # New import for getting the image MIME type
 from huggingface_hub import InferenceClient
 
 # --- Streamlit Page Config ---
@@ -26,11 +27,13 @@ input_option = st.radio("Select Input Method:", ["Upload Image", "Paste Image UR
 
 image_bytes = None
 image_url = None
+image_mime_type = None
 
 if input_option == "Upload Image":
     uploaded_file = st.file_uploader("Choose an image...", type=["png", "jpg", "jpeg"])
     if uploaded_file:
         image_bytes = uploaded_file.read()
+        image_mime_type = uploaded_file.type # Get MIME type directly from Streamlit file object
         st.image(image_bytes, caption="Uploaded Image", use_column_width=True)
 elif input_option == "Paste Image URL":
     image_url = st.text_input("Enter Image URL")
@@ -45,26 +48,45 @@ if st.button("Analyze"):
     elif not (image_bytes or image_url):
         st.error("Please provide an image!")
     else:
-        client = InferenceClient(api_key=hf_token)
-
-        # Prepare the message payload
-        msg_content = [
-            {"type": "text", "text": "Describe the visual cues of the pond and suggest remedies to improve the environment. Write in Bangla, max 100 words."}
-        ]
-
-        if image_url:
-            msg_content.append({"type": "image_url", "image_url": {"url": image_url}})
-        elif image_bytes:
-            # Convert bytes to base64 string for JSON
-            b64_image = base64.b64encode(image_bytes).decode("utf-8")
-            msg_content.append({"type": "image_base64", "image_base64": b64_image})
-
+        st.info("Sending request to Hugging Face Inference API...")
+        
         try:
+            client = InferenceClient(api_key=hf_token)
+
+            # Prepare the message payload
+            msg_content = []
+            
+            if image_url:
+                # For URL, add it directly as a string or a dict with 'url' key, depending on model requirement
+                msg_content.append({"type": "image_url", "image_url": {"url": image_url}})
+            
+            elif image_bytes:
+                # 💥 FIX 1: Convert bytes to base64 string and format as a **Data URI**
+                b64_image = base64.b64encode(image_bytes).decode("utf-8")
+                
+                # Construct the Data URI: data:<mime_type>;base64,<base64_string>
+                data_uri = f"data:{image_mime_type};base64,{b64_image}"
+                
+                # Append the image as a URL of type Data URI
+                msg_content.append({"type": "image_url", "image_url": {"url": data_uri}})
+
+
+            # Add the text prompt (must be after the image for multi-modal context)
+            msg_content.append(
+                {"type": "text", "text": "Describe the visual cues of the pond and suggest remedies to improve the environment. Write in Bangla, max 100 words."}
+            )
+
             completion = client.chat.completions.create(
                 model="Qwen/Qwen3-VL-8B-Instruct",
                 messages=[{"role": "user", "content": msg_content}]
             )
+            
             st.success("Analysis Complete ✅")
-            st.write(completion.choices[0].message["content"][0]["text"])
+            
+            # 💥 FIX 2: Correctly extract the text content from the API response object
+            response_text = completion.choices[0].message.content
+            
+            st.write(response_text)
+            
         except Exception as e:
             st.error(f"API call failed: {e}")
