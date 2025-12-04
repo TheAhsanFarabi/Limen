@@ -1,5 +1,6 @@
 import os
 import base64
+import json
 import streamlit as st
 import mimetypes
 from huggingface_hub import InferenceClient
@@ -12,8 +13,8 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- Helper: PDF Generator (Fixed for Unicode/fpdf2) ---
-def create_pdf(analysis_text, prompt_type):
+# --- Helper: PDF Generator ---
+def create_pdf(analysis_text, prompt_type, mode):
     class PDF(FPDF):
         def header(self):
             self.set_font('Helvetica', 'B', 15)
@@ -25,46 +26,42 @@ def create_pdf(analysis_text, prompt_type):
     
     # Metadata
     pdf.set_font("Helvetica", "I", 10)
-    pdf.cell(0, 10, txt=f"Focus Strategy: {prompt_type}", new_x="LMARGIN", new_y="NEXT", align="L")
+    pdf.cell(0, 10, txt=f"Strategy: {prompt_type} | Mode: {mode}", new_x="LMARGIN", new_y="NEXT", align="L")
     pdf.ln(5)
     
     # Body Content
     pdf.set_font("Helvetica", size=11)
     
-    # --- 🛡️ THE FIX: Safe Text Sanitization ---
-    # Standard PDF fonts (Helvetica) don't support emojis (🌿, 🌊).
-    # We strip Markdown (##, **) and replace unsupported characters with '?' 
-    # to prevent the app from crashing.
+    # Sanitization
     clean_text = analysis_text.replace("##", "").replace("**", "")
-    
-    # This line encodes the text to Latin-1 (standard PDF) and replaces 
-    # errors (emojis) with a '?' instead of crashing.
     safe_text = clean_text.encode('latin-1', 'replace').decode('latin-1')
     
     pdf.multi_cell(0, 10, safe_text)
-    
-    # Output the PDF as bytes
     return bytes(pdf.output())
 
 # --- Sidebar Configuration ---
 with st.sidebar:
     st.header("⚙️ Configuration")
     
-    # 1. API Key Input
-    hf_token = st.text_input("Hugging Face API Key", type="password", help="Enter your HF read/write token")
+    # 1. API Key Input with Helper Link
+    st.markdown("### 1. Credentials")
+    hf_token = st.text_input("Hugging Face API Key", type="password")
+    st.link_button("🔑 Get HF API Key", "https://huggingface.co/settings/tokens")
     
     st.markdown("---")
     
-    # 2. Model Selection
-    model_id = st.selectbox(
-        "Select AI Model",
-        ["Qwen/Qwen3-VL-8B-Instruct", "meta-llama/Llama-3.2-11B-Vision-Instruct", "Qwen/Qwen2-VL-7B-Instruct"],
-        index=0
+    # 2. Mode Selection (New Feature)
+    st.markdown("### 2. Analysis Mode")
+    analysis_mode = st.radio(
+        "Select Depth:",
+        ["🚀 Fast Mode (Metrics)", "🔬 Research Mode (Detailed)"],
+        captions=["Visual scores & quick stats", "In-depth academic textual analysis"]
     )
-    
-    # 3. Analysis Focus (4 Options)
-    prompt_type = st.radio(
-        "Analysis Focus Strategy",
+
+    # 3. Focus Area
+    st.markdown("### 3. Focus Area")
+    prompt_type = st.selectbox(
+        "Strategy:",
         [
             "General Health Check",
             "Water Quality & Turbidity", 
@@ -72,145 +69,164 @@ with st.sidebar:
             "Biodiversity & Wildlife Potential"
         ]
     )
-    
-    st.markdown("---")
-    st.info("💡 **Tip:** Use 'General Health' for a broad overview, or specific modes for targeted advice.")
 
 # --- Define Prompts ---
-prompts = {
+
+# Research Mode Prompts (Textual)
+research_prompts = {
     "General Health Check": 
-        "Analyze the overall environment of the pond shown. "
-        "Strictly format your response into two distinct sections with these headers: "
-        "'## 1. Visual Observations' (describe the water color, banks, and surroundings) and "
-        "'## 2. Recommended Solutions' (general maintenance and improvement tips). "
-        "Keep the language English and professional.",
-
+        "Analyze the overall environment. Format as: '## 1. Visual Observations' and '## 2. Scientific Recommendations'. detailed and academic.",
     "Water Quality & Turbidity": 
-        "Focus specifically on the water quality indicators such as color, turbidity, and surface debris. "
-        "Strictly format your response into two distinct sections with these headers: "
-        "'## 1. Visual Observations' (what indicates poor or good water quality) and "
-        "'## 2. Recommended Solutions' (filtration, chemical treatments, or natural cleaning methods). "
-        "Keep the language English and professional.",
-
+        "Focus on water quality (turbidity, color). Format as: '## 1. Visual Observations' and '## 2. Remediation Protocols'. detailed and academic.",
     "Vegetation & Algae Control": 
-        "Focus on the biological aspects like algae bloom, weeds, and bank plants. "
-        "Strictly format your response into two distinct sections with these headers: "
-        "'## 1. Visual Observations' (identify visible plants or algae types) and "
-        "'## 2. Recommended Solutions' (how to manage overgrowth or plant beneficial species). "
-        "Keep the language English and professional.",
-        
+        "Focus on flora. Format as: '## 1. Botanical Identification' and '## 2. Management Strategy'. detailed and academic.",
     "Biodiversity & Wildlife Potential":
-        "Analyze the pond's potential to support fish, amphibians, and birds. "
-        "Strictly format your response into two distinct sections with these headers: "
-        "'## 1. Visual Observations' (habitats, shelter, water depth cues) and "
-        "'## 2. Recommended Solutions' (adding logs, specific plants, or depth variation to encourage wildlife). "
-        "Keep the language English and professional."
+        "Focus on fauna support. Format as: '## 1. Habitat Assessment' and '## 2. Ecological Enhancement'. detailed and academic."
 }
+
+# Fast Mode Prompt (JSON extraction)
+fast_mode_prompt = (
+    "Analyze this pond image and output ONLY a valid JSON object. Do not write any conversational text. "
+    "The JSON must have these exact keys: "
+    "'clarity_score' (integer 0-100, where 100 is crystal clear), "
+    "'algae_risk_score' (integer 0-100, where 100 is dangerous bloom), "
+    "'biodiversity_score' (integer 0-100), "
+    "'key_observation' (string, max 15 words), "
+    "'primary_recommendation' (string, max 15 words). "
+)
 
 # --- Main App Interface ---
 
-# Hero Section
+# Hero Section with University Icon
 st.markdown(
     """
-    <div style='text-align: center; padding: 2rem 0;'>
-        <div style='display: flex; justify_content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="60" style="border-radius: 10px;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="60" style="border-radius: 10px;">
+    <div style='text-align: center; padding: 2rem 0; background-color: #f8f9fa; border-radius: 15px; margin-bottom: 2rem;'>
+        <div style='display: flex; justify_content: space-between; align-items: center; max_width: 800px; margin: 0 auto; padding: 0 20px;'>
+            <img src="https://cdn-icons-png.flaticon.com/512/2997/2997255.png" width="70" style="opacity: 0.8;">
+            
+            <div style='text-align: center;'>
+                <div style='display: flex; justify_content: center; gap: 10px; margin-bottom: 10px;'>
+                     <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="40" style="border-radius: 5px;">
+                     <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="40" style="border-radius: 5px;">
+                </div>
+                <h1 style='margin:0; font-size: 2.5rem;'>🌊 Pond Ecosystem Analyzer</h1>
+                <p style='color: #666; margin-top: 5px;'>AI-Powered Aquatic Intelligence System</p>
+            </div>
+            
+            <img src="https://cdn-icons-png.flaticon.com/512/1087/1087815.png" width="70" style="opacity: 0.8;">
         </div>
-        <h1>🌊 Pond Ecosystem Analyzer</h1>
-        <p style='font-size: 1.2rem; color: #666;'>
-            Advanced AI diagnostics for aquatic environments. <br>
-            Supporting <b>SDG 6 (Clean Water)</b> & <b>SDG 14 (Life Below Water)</b>.
-        </p>
     </div>
     """, unsafe_allow_html=True
 )
-# --- Logic Gate: Check for API Key ---
+
+# --- Logic Gate ---
 if not hf_token:
-    st.warning("🔒 Please enter your Hugging Face API Key in the sidebar to unlock the analyzer.")
+    st.info("👋 Welcome! Please enter your Hugging Face API Key in the sidebar to start.")
     st.stop()
 
-# --- Image Input Section ---
-col1, col2 = st.columns([1, 1], gap="medium")
+# --- Input Section ---
+col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
-    st.subheader("1. Input Data")
-    input_option = st.radio("Choose Input Method:", ["Upload Image", "Paste Image URL"], horizontal=True)
-
-    image_bytes = None
-    image_url = None
-    image_mime_type = None
-
-    if input_option == "Upload Image":
-        uploaded_file = st.file_uploader("Upload pond image", type=["png", "jpg", "jpeg"])
-        if uploaded_file:
-            image_bytes = uploaded_file.read()
-            image_mime_type = uploaded_file.type
-            st.image(image_bytes, caption="Preview", use_column_width=True, channels="RGB")
+    st.subheader("📸 Input Source")
+    input_type = st.radio("", ["Upload Image", "Image URL"], horizontal=True, label_visibility="collapsed")
+    
+    image_data = None
+    display_image = None
+    
+    if input_type == "Upload Image":
+        uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
+        if uploaded:
+            image_data = uploaded.read()
+            mime = uploaded.type
+            # Create Data URI
+            b64 = base64.b64encode(image_data).decode()
+            display_image = f"data:{mime};base64,{b64}"
+            st.image(image_data, use_column_width=True, caption="Analysis Target")
             
-    elif input_option == "Paste Image URL":
-        image_url = st.text_input("Enter Image URL")
-        if image_url:
-            st.image(image_url, caption="Preview", use_column_width=True)
+    else:
+        url = st.text_input("Paste URL")
+        if url:
+            display_image = url
+            st.image(url, use_column_width=True, caption="Analysis Target")
 
 with col2:
-    st.subheader("2. AI Analysis")
+    st.subheader("📊 Analysis Results")
     
-    # Placeholders for results
-    result_container = st.empty()
-    
-    # Analyze Button
-    if st.button("🔍 Run Analysis", type="primary", use_container_width=True):
-        if not (image_bytes or image_url):
-            st.error("⚠️ Please provide an image first.")
+    if st.button("Run Analysis", type="primary", use_container_width=True):
+        if not display_image:
+            st.error("Please provide an image.")
         else:
-            with st.spinner(f"Analyzing for {prompt_type}..."):
+            with st.spinner("Processing visual data..."):
                 try:
                     client = InferenceClient(api_key=hf_token)
-                    msg_content = []
+                    messages = []
                     
-                    # Image Logic
-                    if image_url:
-                        msg_content.append({"type": "image_url", "image_url": {"url": image_url}})
-                    elif image_bytes:
-                        b64_image = base64.b64encode(image_bytes).decode("utf-8")
-                        data_uri = f"data:{image_mime_type};base64,{b64_image}"
-                        msg_content.append({"type": "image_url", "image_url": {"url": data_uri}})
-
-                    # Text Prompt
-                    msg_content.append({"type": "text", "text": prompts[prompt_type]})
-
+                    # Add Image
+                    messages.append({"type": "image_url", "image_url": {"url": display_image}})
+                    
+                    # Select Prompt based on Mode
+                    if "Fast Mode" in analysis_mode:
+                        final_prompt = fast_mode_prompt
+                    else:
+                        final_prompt = research_prompts[prompt_type]
+                        
+                    messages.append({"type": "text", "text": final_prompt})
+                    
                     # API Call
                     completion = client.chat.completions.create(
-                        model=model_id,
-                        messages=[{"role": "user", "content": msg_content}],
+                        model="Qwen/Qwen3-VL-8B-Instruct",
+                        messages=[{"role": "user", "content": messages}],
                         max_tokens=500
                     )
                     
-                    response_text = completion.choices[0].message.content
-                    
-                    # Store result in session state
-                    st.session_state['last_analysis'] = response_text
-                    
-                    # Display Result
-                    result_container.markdown(response_text)
+                    raw_result = completion.choices[0].message.content
+                    st.session_state['result'] = raw_result
+                    st.session_state['mode'] = analysis_mode
                     
                 except Exception as e:
-                    st.error(f"Analysis Failed: {str(e)}")
+                    st.error(f"Error: {e}")
 
-    # Show Download Button if analysis exists
-    if 'last_analysis' in st.session_state:
-        # Re-display the analysis so it doesn't disappear on interaction
-        result_container.markdown(st.session_state['last_analysis'])
+    # --- Result Display Logic ---
+    if 'result' in st.session_state:
+        result = st.session_state['result']
+        mode = st.session_state['mode']
         
+        # 🚀 Display for FAST MODE (JSON Parsing)
+        if "Fast Mode" in mode:
+            try:
+                # Clean code blocks if LLM adds them
+                clean_json = result.replace("```json", "").replace("```", "").strip()
+                data = json.loads(clean_json)
+                
+                st.write("### ⚡ Rapid Diagnostics")
+                
+                # Metric Columns
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Clarity", f"{data.get('clarity_score', 0)}%")
+                m2.metric("Algae Risk", f"{data.get('algae_risk_score', 0)}%")
+                m3.metric("Biodiversity", f"{data.get('biodiversity_score', 0)}%")
+                
+                # Progress Bars
+                st.caption("Water Clarity Level")
+                st.progress(data.get('clarity_score', 0) / 100)
+                
+                st.caption("Algae Bloom Risk")
+                st.progress(data.get('algae_risk_score', 0) / 100)
+                
+                # Key Takeaways
+                st.success(f"**Observation:** {data.get('key_observation', 'N/A')}")
+                st.info(f"**Action:** {data.get('primary_recommendation', 'N/A')}")
+                
+            except json.JSONDecodeError:
+                st.warning("Could not parse metrics. Showing raw text instead.")
+                st.write(result)
+                
+        # 🔬 Display for RESEARCH MODE (Text)
+        else:
+            st.markdown(result)
+        
+        # Download Button
         st.markdown("---")
-        # Generate PDF with Safe Text Logic
-        pdf_data = create_pdf(st.session_state['last_analysis'], prompt_type)
-        
-        st.download_button(
-            label="📄 Download Report as PDF",
-            data=pdf_data,
-            file_name="pond_analysis_report.pdf",
-            mime="application/pdf",
-            use_container_width=True
-        )
+        pdf_bytes = create_pdf(str(result), prompt_type, mode)
+        st.download_button("📥 Download Report (PDF)", pdf_bytes, "report.pdf", "application/pdf", use_container_width=True)
