@@ -9,35 +9,42 @@ from fpdf import FPDF
 st.set_page_config(
     page_title="Pond Ecosystem Analyzer 🌿",
     page_icon="🌊",
-    layout="wide"  # Changed to wide for better report viewing
+    layout="wide"
 )
 
-# --- Helper: PDF Generator ---
+# --- Helper: PDF Generator (Fixed for Unicode/fpdf2) ---
 def create_pdf(analysis_text, prompt_type):
-    pdf = FPDF()
+    class PDF(FPDF):
+        def header(self):
+            self.set_font('Helvetica', 'B', 15)
+            self.cell(0, 10, 'Pond Ecosystem Analysis Report', align='C', new_x="LMARGIN", new_y="NEXT")
+            self.ln(5)
+
+    pdf = PDF()
     pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    
-    # Title
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(200, 10, txt="Pond Ecosystem Analysis Report", ln=True, align="C")
-    pdf.ln(10)
     
     # Metadata
-    pdf.set_font("Arial", "I", 10)
-    pdf.cell(200, 10, txt=f"Focus Strategy: {prompt_type}", ln=True, align="L")
+    pdf.set_font("Helvetica", "I", 10)
+    pdf.cell(0, 10, txt=f"Focus Strategy: {prompt_type}", new_x="LMARGIN", new_y="NEXT", align="L")
     pdf.ln(5)
     
-    # Content - Handling unicode can be tricky in FPDF, 
-    # so we use a standard font and clean encoding for this basic version.
-    pdf.set_font("Arial", size=11)
+    # Body Content
+    pdf.set_font("Helvetica", size=11)
     
-    # FPDF doesn't handle markdown, so we do a simple write
-    # We strip the markdown headers (##) for cleaner PDF look
+    # --- 🛡️ THE FIX: Safe Text Sanitization ---
+    # Standard PDF fonts (Helvetica) don't support emojis (🌿, 🌊).
+    # We strip Markdown (##, **) and replace unsupported characters with '?' 
+    # to prevent the app from crashing.
     clean_text = analysis_text.replace("##", "").replace("**", "")
-    pdf.multi_cell(0, 10, clean_text)
     
-    return pdf.output(dest="S").encode("latin-1", "replace") 
+    # This line encodes the text to Latin-1 (standard PDF) and replaces 
+    # errors (emojis) with a '?' instead of crashing.
+    safe_text = clean_text.encode('latin-1', 'replace').decode('latin-1')
+    
+    pdf.multi_cell(0, 10, safe_text)
+    
+    # Output the PDF as bytes
+    return bytes(pdf.output())
 
 # --- Sidebar Configuration ---
 with st.sidebar:
@@ -62,7 +69,7 @@ with st.sidebar:
             "General Health Check",
             "Water Quality & Turbidity", 
             "Vegetation & Algae Control",
-            "Biodiversity & Wildlife Potential" # New 4th option
+            "Biodiversity & Wildlife Potential"
         ]
     )
     
@@ -118,7 +125,7 @@ st.markdown(
 # --- Logic Gate: Check for API Key ---
 if not hf_token:
     st.warning("🔒 Please enter your Hugging Face API Key in the sidebar to unlock the analyzer.")
-    st.stop() # Stops the script here until key is provided
+    st.stop()
 
 # --- Image Input Section ---
 col1, col2 = st.columns([1, 1], gap="medium")
@@ -179,7 +186,7 @@ with col2:
                     
                     response_text = completion.choices[0].message.content
                     
-                    # Store result in session state to persist through re-runs if needed
+                    # Store result in session state
                     st.session_state['last_analysis'] = response_text
                     
                     # Display Result
@@ -194,7 +201,9 @@ with col2:
         result_container.markdown(st.session_state['last_analysis'])
         
         st.markdown("---")
+        # Generate PDF with Safe Text Logic
         pdf_data = create_pdf(st.session_state['last_analysis'], prompt_type)
+        
         st.download_button(
             label="📄 Download Report as PDF",
             data=pdf_data,
