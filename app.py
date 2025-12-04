@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # --- Helper: PDF Generator ---
-def create_pdf(analysis_text, prompt_type, mode):
+def create_pdf(analysis_text, prompt_type, mode, model_name):
     class PDF(FPDF):
         def header(self):
             self.set_font('Helvetica', 'B', 15)
@@ -26,13 +26,14 @@ def create_pdf(analysis_text, prompt_type, mode):
     
     # Metadata
     pdf.set_font("Helvetica", "I", 10)
+    pdf.cell(0, 10, txt=f"Model: {model_name}", new_x="LMARGIN", new_y="NEXT", align="L")
     pdf.cell(0, 10, txt=f"Strategy: {prompt_type} | Mode: {mode}", new_x="LMARGIN", new_y="NEXT", align="L")
     pdf.ln(5)
     
     # Body Content
     pdf.set_font("Helvetica", size=11)
     
-    # Sanitization
+    # Sanitization for PDF
     clean_text = analysis_text.replace("##", "").replace("**", "")
     safe_text = clean_text.encode('latin-1', 'replace').decode('latin-1')
     
@@ -43,22 +44,27 @@ def create_pdf(analysis_text, prompt_type, mode):
 with st.sidebar:
     st.header("⚙️ Configuration")
     
-    # 1. API Key Input with Helper Link
+    # 1. API Key Input
     st.markdown("### 1. Credentials")
-    hf_token = st.text_input("Hugging Face API Key", type="password")
+    hf_token = st.text_input("Enter Hugging Face Token", type="password", help="Your HF Access Token")
     st.link_button("🔑 Get HF API Key", "https://huggingface.co/settings/tokens")
     
     st.markdown("---")
     
-    # 2. Mode Selection (New Feature)
-    st.markdown("### 2. Analysis Mode")
-    analysis_mode = st.radio(
-        "Select Depth:",
-        ["🚀 Fast Mode (Metrics)", "🔬 Research Mode (Detailed)"],
-        captions=["Visual scores & quick stats", "In-depth academic textual analysis"]
+    # 2. Model Selection (Restored)
+    st.markdown("### 2. AI Model")
+    model_id = st.selectbox(
+        "Select Vision Model:",
+        [
+            "Qwen/Qwen2.5-VL-72B-Instruct", 
+            "Qwen/Qwen2-VL-7B-Instruct", 
+            "meta-llama/Llama-3.2-11B-Vision-Instruct"
+        ],
+        index=1,
+        help="Select the AI model architecture to use for analysis."
     )
 
-    # 3. Focus Area
+    # 3. Focus Area (Strategy)
     st.markdown("### 3. Focus Area")
     prompt_type = st.selectbox(
         "Strategy:",
@@ -69,19 +75,24 @@ with st.sidebar:
             "Biodiversity & Wildlife Potential"
         ]
     )
+    
+    st.markdown("---")
+    
+    # 4. Tips (Restored)
+    st.info("💡 **Tip:** 'Fast Mode' uses strict JSON parsing for metrics. If it fails, try 'Research Mode' for a raw text analysis.")
 
 # --- Define Prompts ---
 
 # Research Mode Prompts (Textual)
 research_prompts = {
     "General Health Check": 
-        "Analyze the overall environment. Format as: '## 1. Visual Observations' and '## 2. Scientific Recommendations'. detailed and academic.",
+        "Analyze the overall environment. Format as: '## 1. Visual Observations' and '## 2. Scientific Recommendations'. Be detailed and academic.",
     "Water Quality & Turbidity": 
-        "Focus on water quality (turbidity, color). Format as: '## 1. Visual Observations' and '## 2. Remediation Protocols'. detailed and academic.",
+        "Focus on water quality (turbidity, color). Format as: '## 1. Visual Observations' and '## 2. Remediation Protocols'. Be detailed and academic.",
     "Vegetation & Algae Control": 
-        "Focus on flora. Format as: '## 1. Botanical Identification' and '## 2. Management Strategy'. detailed and academic.",
+        "Focus on flora. Format as: '## 1. Botanical Identification' and '## 2. Management Strategy'. Be detailed and academic.",
     "Biodiversity & Wildlife Potential":
-        "Focus on fauna support. Format as: '## 1. Habitat Assessment' and '## 2. Ecological Enhancement'. detailed and academic."
+        "Focus on fauna support. Format as: '## 1. Habitat Assessment' and '## 2. Ecological Enhancement'. Be detailed and academic."
 }
 
 # Fast Mode Prompt (JSON extraction)
@@ -97,23 +108,16 @@ fast_mode_prompt = (
 
 # --- Main App Interface ---
 
-# Hero Section with University Icon
+# Hero Section (Cleaned up - No University Icon)
 st.markdown(
     """
     <div style='text-align: center; padding: 2rem 0; background-color: #f8f9fa; border-radius: 15px; margin-bottom: 2rem;'>
-        <div style='display: flex; justify_content: space-between; align-items: center; max_width: 800px; margin: 0 auto; padding: 0 20px;'>
-            <img src="https://cdn-icons-png.flaticon.com/512/2997/2997255.png" width="70" style="opacity: 0.8;">
-            
-            <div style='text-align: center;'>
-                <div style='display: flex; justify_content: center; gap: 10px; margin-bottom: 10px;'>
-                     <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="40" style="border-radius: 5px;">
-                     <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="40" style="border-radius: 5px;">
-                </div>
-                <h1 style='margin:0; font-size: 2.5rem;'>🌊 Pond Ecosystem Analyzer</h1>
-                <p style='color: #666; margin-top: 5px;'>AI-Powered Aquatic Intelligence System</p>
-            </div>
-            
+        <div style='display: flex; justify_content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="50" style="border-radius: 10px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="50" style="border-radius: 10px;">
         </div>
+        <h1 style='margin:0; font-size: 2.8rem;'>🌊 Pond Ecosystem Analyzer</h1>
+        <p style='color: #666; margin-top: 5px; font-size: 1.1rem;'>AI-Powered Aquatic Intelligence System</p>
     </div>
     """, unsafe_allow_html=True
 )
@@ -150,13 +154,23 @@ with col1:
             st.image(url, use_column_width=True, caption="Analysis Target")
 
 with col2:
-    st.subheader("📊 Analysis Results")
+    st.subheader("📊 Analysis Configuration")
+    
+    # Mode Selection (Moved to Main Area)
+    analysis_mode = st.radio(
+        "Select Analysis Mode:",
+        ["🚀 Fast Mode (Metrics)", "🔬 Research Mode (Detailed)"],
+        captions=["Visual scores & quick stats", "In-depth academic textual analysis"],
+        horizontal=True
+    )
+    
+    st.markdown("---")
     
     if st.button("Run Analysis", type="primary", use_container_width=True):
         if not display_image:
             st.error("Please provide an image.")
         else:
-            with st.spinner("Processing visual data..."):
+            with st.spinner(f"Processing with {model_id}..."):
                 try:
                     client = InferenceClient(api_key=hf_token)
                     messages = []
@@ -174,7 +188,7 @@ with col2:
                     
                     # API Call
                     completion = client.chat.completions.create(
-                        model="Qwen/Qwen3-VL-8B-Instruct",
+                        model=model_id,
                         messages=[{"role": "user", "content": messages}],
                         max_tokens=500
                     )
@@ -191,14 +205,14 @@ with col2:
         result = st.session_state['result']
         mode = st.session_state['mode']
         
+        st.markdown("### 📝 Results")
+        
         # 🚀 Display for FAST MODE (JSON Parsing)
         if "Fast Mode" in mode:
             try:
                 # Clean code blocks if LLM adds them
                 clean_json = result.replace("```json", "").replace("```", "").strip()
                 data = json.loads(clean_json)
-                
-                st.write("### ⚡ Rapid Diagnostics")
                 
                 # Metric Columns
                 m1, m2, m3 = st.columns(3)
@@ -227,5 +241,5 @@ with col2:
         
         # Download Button
         st.markdown("---")
-        pdf_bytes = create_pdf(str(result), prompt_type, mode)
+        pdf_bytes = create_pdf(str(result), prompt_type, mode, model_id)
         st.download_button("📥 Download Report (PDF)", pdf_bytes, "report.pdf", "application/pdf", use_container_width=True)
