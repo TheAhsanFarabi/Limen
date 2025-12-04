@@ -50,21 +50,10 @@ def create_pdf(analysis_text, prompt_type, mode, model_name):
 with st.sidebar:
     st.header("⚙️ Configuration")
     
-    # 1. API Key Input (FIXED: Persistent Input)
+    # 1. API Key Input
     st.markdown("### 1. Credentials")
-    
-    # Helper link
-    st.markdown("[🔑 Get HF API Key](https://huggingface.co/settings/tokens)")
-    
-    # Direct input so it doesn't disappear on reload
-    hf_token = st.text_input(
-        "Enter Hugging Face Token", 
-        type="password", 
-        help="Your HF Access Token (Read/Write)"
-    )
-    
-    if hf_token:
-        st.success("Token detected! ✅")
+    hf_token = st.text_input("Enter Hugging Face Token", type="password", help="Your HF Access Token")
+    st.link_button("🔑 Get HF API Key", "https://huggingface.co/settings/tokens")
     
     st.markdown("---")
     
@@ -126,28 +115,16 @@ fast_mode_prompt = (
 
 # --- Main App Interface ---
 
-# Hero Section (FIXED: Justified Layout with Uni Logo & SDGs)
+# Hero Section (Cleaned up - No University Icon)
 st.markdown(
     """
-    <div style='background-color: #f8f9fa; border-radius: 15px; padding: 20px; margin-bottom: 2rem; display: flex; justify_content: space-between; align-items: center;'>
-        
-        <!-- Left: University Icon -->
-        <div style='flex: 1; text-align: left;'>
-            <img src="https://cdn-icons-png.flaticon.com/512/2997/2997255.png" width="80" style="opacity: 0.8;" title="University Research Lab">
+    <div style='text-align: center; padding: 2rem 0; margin-bottom: 2rem;'>
+        <div style='display: flex; justify_content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="50" style="border-radius: 10px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="50" style="border-radius: 10px;">
         </div>
-        
-        <!-- Center: Title -->
-        <div style='flex: 2; text-align: center;'>
-            <h1 style='margin:0; font-size: 2.5rem;'>🌊 Pond Ecosystem Analyzer</h1>
-            <p style='color: #666; margin-top: 5px; font-size: 1.1rem;'>AI-Powered Aquatic Intelligence System</p>
-        </div>
-
-        <!-- Right: SDG Icons -->
-        <div style='flex: 1; text-align: right; display: flex; justify_content: flex-end; gap: 15px;'>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="60" style="border-radius: 10px;" title="SDG 6: Clean Water">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="60" style="border-radius: 10px;" title="SDG 14: Life Below Water">
-        </div>
-
+        <h1 style='margin:0; font-size: 2.8rem;'>🌊 Pond Ecosystem Analyzer</h1>
+        <p style='color: #666; margin-top: 5px; font-size: 1.1rem;'>AI-Powered Aquatic Intelligence System</p>
     </div>
     """, unsafe_allow_html=True
 )
