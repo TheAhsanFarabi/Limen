@@ -56,11 +56,11 @@ with st.sidebar:
     model_id = st.selectbox(
         "Select Vision Model:",
         [
-            "Qwen/Qwen3-VL-8B-Instruct ", 
+            "Qwen/Qwen2.5-VL-72B-Instruct", 
             "Qwen/Qwen2-VL-7B-Instruct", 
             "meta-llama/Llama-3.2-11B-Vision-Instruct"
         ],
-        index=1,
+        index=0,
         help="Select the AI model architecture to use for analysis."
     )
 
@@ -111,7 +111,7 @@ fast_mode_prompt = (
 # Hero Section (Cleaned up - No University Icon)
 st.markdown(
     """
-    <div style='text-align: center; padding: 2rem 0; background-color: #f8f9fa; border-radius: 15px; margin-bottom: 2rem;'>
+    <div style='text-align: center; padding: 2rem 0; margin-bottom: 2rem;'>
         <div style='display: flex; justify_content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
             <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="50" style="border-radius: 10px;">
             <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="50" style="border-radius: 10px;">
