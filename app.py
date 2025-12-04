@@ -48,6 +48,7 @@ def create_pdf(analysis_text, prompt_type, mode, model_name):
 
 # --- Sidebar Configuration ---
 with st.sidebar:
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxkZyV0ooGguTljRql__gv7VkKUB8qdfgeSA&s" width="50" style="border-radius: 10px;">
     st.header("⚙️ Configuration")
     
     # 1. API Key Input
@@ -120,7 +121,6 @@ st.markdown(
     """
     <div style='text-align: center; padding: 2rem 0; margin-bottom: 2rem;'>
         <div style='display: flex; justify_content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxkZyV0ooGguTljRql__gv7VkKUB8qdfgeSA&s" width="50" style="border-radius: 10px;">
             <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="50" style="border-radius: 10px;">
             <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="50" style="border-radius: 10px;">
         </div>
