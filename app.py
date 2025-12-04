@@ -114,7 +114,7 @@ st.markdown(
     """
     <div style='text-align: center; padding: 2rem 0;'>
         <div style='display: flex; justify_content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
-            <img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_goals_icons-cmyk-06.jpg" width="60" style="border-radius: 10px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="60" style="border-radius: 10px;">
             <img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_goals_icons-cmyk-14.jpg" width="60" style="border-radius: 10px;">
         </div>
         <h1>🌊 Pond Ecosystem Analyzer</h1>
