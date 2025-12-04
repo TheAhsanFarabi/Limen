@@ -56,6 +56,7 @@ with st.sidebar:
     model_id = st.selectbox(
         "Select Vision Model:",
         [
+            "Qwen/Qwen3-VL-8B-Instruct",
             "Qwen/Qwen2.5-VL-72B-Instruct", 
             "Qwen/Qwen2-VL-7B-Instruct", 
             "meta-llama/Llama-3.2-11B-Vision-Instruct"
