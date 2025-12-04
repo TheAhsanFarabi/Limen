@@ -125,15 +125,29 @@ fast_mode_prompt = (
 st.markdown(
     """
     <div style='text-align: center; padding: 2rem 0; margin-bottom: 2rem;'>
-        <div style='display: flex; justify_content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
+        <div style='display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
             <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="50" style="border-radius: 10px;">
             <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="50" style="border-radius: 10px;">
         </div>
         <h1 style='margin:0; font-size: 2.8rem;'>🌊 Pond Ecosystem Analyzer</h1>
         <p style='color: #666; margin-top: 5px; font-size: 1.1rem;'>AI-Powered Aquatic Intelligence System</p>
+        <p style='color: #444; font-size: 1rem; margin-top: 10px; max-width: 650px; margin-left: auto; margin-right: auto;'>
+            Ensure the health of your ponds, lakes, and small water bodies with AI-driven insights. 
+            Monitor water quality, detect algae risks, assess biodiversity, and get actionable recommendations.
+        </p>
+        <ul style='text-align: left; display: inline-block; color: #555; font-size: 0.95rem; margin-top: 10px;'>
+            <li>Quick visual analysis & metrics for clarity, algae risk, and biodiversity</li>
+            <li>Detailed research-mode reports with botanical & ecological insights</li>
+            <li>Downloadable PDF reports for record keeping or study</li>
+            <li>Supports image upload or direct URL analysis</li>
+        </ul>
+        <p style='margin-top: 15px; font-weight: bold; color: #333; font-size: 1rem;'>
+            Start by uploading a pond image or pasting its URL below ⬇️
+        </p>
     </div>
     """, unsafe_allow_html=True
 )
+
 
 # --- Logic Gate ---
 if not hf_token:
