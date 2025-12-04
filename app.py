@@ -2,7 +2,6 @@ import os
 import base64
 import json
 import streamlit as st
-import mimetypes
 from huggingface_hub import InferenceClient
 from fpdf import FPDF
 
@@ -48,7 +47,7 @@ def create_pdf(analysis_text, prompt_type, mode, model_name):
 
 # --- Sidebar Configuration ---
 with st.sidebar:
-    # Logo first (From your updated code)
+    # Logo
     st.image(
         "https://www.uiu.ac.bd/wp-content/uploads/2023/10/header-logo.png",
         width=150,
@@ -58,11 +57,8 @@ with st.sidebar:
     
     # 1. API Key Input
     st.markdown("### 1. Credentials")
-    
-    # Link to get token
     st.markdown("[🔑 Get HF API Key](https://huggingface.co/settings/tokens)")
     
-    # Persistent Input (Fixed to prevent disappearing on interaction)
     hf_token = st.text_input(
         "Enter Hugging Face Token", 
         type="password", 
@@ -79,13 +75,11 @@ with st.sidebar:
     model_id = st.selectbox(
         "Select Vision Model:",
         [
-            "Qwen/Qwen3-VL-8B-Instruct",
             "Qwen/Qwen2.5-VL-72B-Instruct", 
             "Qwen/Qwen2-VL-7B-Instruct", 
             "meta-llama/Llama-3.2-11B-Vision-Instruct"
         ],
-        index=0,
-        help="Select the AI model architecture to use for analysis."
+        index=0
     )
 
     # 3. Focus Area (Strategy)
@@ -101,13 +95,11 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    
-    # 4. Tips
     st.info("💡 **Tip:** 'Fast Mode' uses strict JSON parsing for metrics. If it fails, try 'Research Mode' for a raw text analysis.")
 
 # --- Define Prompts ---
 
-# Research Mode Prompts (Textual) - UPDATED to 200 words constraint
+# Research Mode Prompts (Textual)
 research_prompts = {
     "General Health Check": 
         "Analyze the overall environment. Format as: '## 1. Visual Observations' and '## 2. Recommended Solutions'. Provide visual cues info and solutions in max 200 words.",
@@ -131,7 +123,8 @@ fast_mode_prompt = (
 )
 
 # --- Main App Interface ---
-# Hero Section (Preserved from your code)
+
+# 🎨 MODERN HERO SECTION (Updated)
 st.markdown(
     """
     <style>
@@ -159,6 +152,7 @@ st.markdown(
             font-size: 3rem;
             font-weight: 800;
             margin: 0;
+            color: #007CF0; /* Fallback */
             background: -webkit-linear-gradient(45deg, #007CF0, #00DFD8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -235,13 +229,11 @@ st.markdown(
     </style>
 
     <div class="hero-container">
-        <!-- SDG Badges -->
         <div class="sdg-badges">
             <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" class="sdg-img" title="Clean Water and Sanitation">
             <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" class="sdg-img" title="Life Below Water">
         </div>
 
-        <!-- Title Section -->
         <h1 class="hero-title">Pond Ecosystem Analyzer</h1>
         <p class="hero-subtitle">AI-Powered Aquatic Intelligence System</p>
         <p class="hero-desc">
@@ -249,7 +241,6 @@ st.markdown(
             Monitor turbidity, algae risks, and biodiversity with a single upload.
         </p>
 
-        <!-- Feature Cards -->
         <div class="feature-grid">
             <div class="feature-card">
                 <span class="card-icon">📊</span>
@@ -313,7 +304,7 @@ with col1:
 with col2:
     st.subheader("📊 Analysis Configuration")
     
-    # Mode Selection (Moved to Main Area)
+    # Mode Selection
     analysis_mode = st.radio(
         "Select Analysis Mode:",
         ["🚀 Fast Mode (Metrics)", "🔬 Research Mode (Detailed)"],
