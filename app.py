@@ -51,7 +51,7 @@ with st.sidebar:
     # Logo first
     st.image(
         "https://www.uiu.ac.bd/wp-content/uploads/2023/10/header-logo.png",
-        width=50,
+        width=150,
         caption=None
     )
     st.header("⚙️ Configuration")
