@@ -113,15 +113,18 @@ prompts = {
 st.markdown(
     """
     <div style='text-align: center; padding: 2rem 0;'>
+        <div style='display: flex; justify_content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
+            <img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_goals_icons-cmyk-06.jpg" width="60" style="border-radius: 10px;">
+            <img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_goals_icons-cmyk-14.jpg" width="60" style="border-radius: 10px;">
+        </div>
         <h1>🌊 Pond Ecosystem Analyzer</h1>
         <p style='font-size: 1.2rem; color: #666;'>
             Advanced AI diagnostics for aquatic environments. <br>
-            Upload a photo to detect water quality issues, algae blooms, and ecological imbalances.
+            Supporting <b>SDG 6 (Clean Water)</b> & <b>SDG 14 (Life Below Water)</b>.
         </p>
     </div>
     """, unsafe_allow_html=True
 )
-
 # --- Logic Gate: Check for API Key ---
 if not hf_token:
     st.warning("🔒 Please enter your Hugging Face API Key in the sidebar to unlock the analyzer.")
