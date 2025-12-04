@@ -26,14 +26,20 @@ def create_pdf(analysis_text, prompt_type, mode, model_name):
     
     # Metadata
     pdf.set_font("Helvetica", "I", 10)
-    pdf.cell(0, 10, txt=f"Model: {model_name}", new_x="LMARGIN", new_y="NEXT", align="L")
-    pdf.cell(0, 10, txt=f"Strategy: {prompt_type} | Mode: {mode}", new_x="LMARGIN", new_y="NEXT", align="L")
+    
+    # 🛡️ SANITIZATION FIX: Encode/Decode metadata to remove emojis from "🚀 Fast Mode", etc.
+    safe_model = model_name.encode('latin-1', 'replace').decode('latin-1')
+    safe_strategy = prompt_type.encode('latin-1', 'replace').decode('latin-1')
+    safe_mode = mode.encode('latin-1', 'replace').decode('latin-1')
+    
+    pdf.cell(0, 10, txt=f"Model: {safe_model}", new_x="LMARGIN", new_y="NEXT", align="L")
+    pdf.cell(0, 10, txt=f"Strategy: {safe_strategy} | Mode: {safe_mode}", new_x="LMARGIN", new_y="NEXT", align="L")
     pdf.ln(5)
     
     # Body Content
     pdf.set_font("Helvetica", size=11)
     
-    # Sanitization for PDF
+    # Sanitization for Body Text
     clean_text = analysis_text.replace("##", "").replace("**", "")
     safe_text = clean_text.encode('latin-1', 'replace').decode('latin-1')
     
