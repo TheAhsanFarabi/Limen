@@ -50,7 +50,7 @@ def create_pdf(analysis_text, prompt_type, mode, model_name):
 with st.sidebar:
     # Logo first
     st.image(
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxkZyV0ooGguTljRql__gv7VkKUB8qdfgeSA&s",
+        "https:https://www.uiu.ac.bd/wp-content/uploads/2023/10/header-logo.png",
         width=50,
         caption=None
     )
