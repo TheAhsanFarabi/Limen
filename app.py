@@ -1,122 +1,70 @@
+import os
+import base64
 import streamlit as st
 from huggingface_hub import InferenceClient
-import requests
-from io import BytesIO
-from PIL import Image
-import base64
 
-# ---- Page Config ----
+# --- Streamlit Page Config ---
 st.set_page_config(
-    page_title="Pond VLM Analyzer",
-    page_icon="🌿",
-    layout="centered",
+    page_title="Pond Analyzer 🌿",
+    page_icon="🖼️",
+    layout="centered"
 )
 
-# ---- Main Title ----
+st.title("🌊 Pond Visual Analyzer")
 st.markdown(
-    "<h1 style='text-align:center; font-size:40px;'>🌿 Pond Visual Analyzer</h1>",
-    unsafe_allow_html=True,
-)
-st.markdown(
-    "<p style='text-align:center; color:gray;'>Check the vibe of your pond and get eco-friendly fixes.</p>",
-    unsafe_allow_html=True,
+    """
+    Upload an image, paste a link, or capture a photo 📸, 
+    and get an environmental analysis with suggested remedies.
+    """
 )
 
-# ---- API Key ----
-hf_key = st.text_input("🔑 HuggingFace API Key (required)", type="password")
+# --- User API Key ---
+hf_token = st.text_input("Enter your Hugging Face API Key", type="password")
 
-if not hf_key:
-    st.info("API key lagbe bro, nahole kichu hobe na.")
-    st.stop()
+# --- Image Input ---
+input_option = st.radio("Select Input Method:", ["Upload Image", "Paste Image URL"])
 
-client = InferenceClient(api_key=hf_key)
+image_bytes = None
+image_url = None
 
-# ---- Image Input Options ----
-st.subheader("📸 Image Input")
+if input_option == "Upload Image":
+    uploaded_file = st.file_uploader("Choose an image...", type=["png", "jpg", "jpeg"])
+    if uploaded_file:
+        image_bytes = uploaded_file.read()
+        st.image(image_bytes, caption="Uploaded Image", use_column_width=True)
+elif input_option == "Paste Image URL":
+    image_url = st.text_input("Enter Image URL")
+    if image_url:
+        st.image(image_url, caption="Image from URL", use_column_width=True)
 
-method = st.radio(
-    "Pick how you wanna give the image:",
-    ["Paste Image URL", "Upload Image", "Use Camera"],
-    horizontal=True,
-)
+# --- Analyze Button ---
+if st.button("Analyze"):
 
-img = None
-
-if method == "Paste Image URL":
-    url = st.text_input("Paste image URL here:")
-    if url:
-        try:
-            res = requests.get(url)
-            img = Image.open(BytesIO(res.content))
-            st.image(img, caption="📷 Loaded Image", use_column_width=True)
-        except:
-            st.error("URL kaj korse na bro. Check the link.")
-
-elif method == "Upload Image":
-    file = st.file_uploader("Upload JPG / PNG", type=["jpg", "jpeg", "png"])
-    if file:
-        img = Image.open(file)
-        st.image(img, caption="📷 Uploaded Image", use_column_width=True)
-
-else:  # Camera
-    file = st.camera_input("Take a photo")
-    if file:
-        img = Image.open(file)
-        st.image(img, caption="📷 Captured Image", use_column_width=True)
-
-# ---- Analyze Button ----
-st.markdown("---")
-st.subheader("🧠 Analyze")
-run = st.button("Analyze 🌱", use_container_width=True)
-
-if run:
-    if img is None:
-        st.error("Image dite hobe first.")
+    if not hf_token:
+        st.error("API Key is required!")
+    elif not (image_bytes or image_url):
+        st.error("Please provide an image!")
     else:
-        # Convert image to base64
-        buf = BytesIO()
-        img.save(buf, format="PNG")
-        img_bytes = buf.getvalue()
-        img_b64 = base64.b64encode(img_bytes).decode("utf-8")
+        client = InferenceClient(api_key=hf_token)
+
+        # Prepare the message payload
+        msg_content = [
+            {"type": "text", "text": "Describe the visual cues of the pond and suggest remedies to improve the environment. Write in Bangla, max 100 words."}
+        ]
+
+        if image_url:
+            msg_content.append({"type": "image_url", "image_url": {"url": image_url}})
+        elif image_bytes:
+            # Convert bytes to base64 string for JSON
+            b64_image = base64.b64encode(image_bytes).decode("utf-8")
+            msg_content.append({"type": "image_base64", "image_base64": b64_image})
 
         try:
-            result = client.chat.completions.create(
+            completion = client.chat.completions.create(
                 model="Qwen/Qwen3-VL-8B-Instruct",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": (
-                                    "Describe the visual cues of the pond and "
-                                    "suggest remedies to improve environmental quality. "
-                                    "Write within 100 words in Bangla."
-                                ),
-                            },
-                            {"type": "image", "image": img_b64},
-                        ],
-                    }
-                ],
+                messages=[{"role": "user", "content": msg_content}]
             )
-
-            reply = result.choices[0].message["content"][0]["text"]
-
-            st.success("Analysis Ready 🌿💧")
-            st.markdown(
-                f"""
-                <div style='padding:15px; background:#f0f7f0; border-radius:10px;'>
-                {reply}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
+            st.success("Analysis Complete ✅")
+            st.write(completion.choices[0].message["content"][0]["text"])
         except Exception as e:
             st.error(f"API call failed: {e}")
-
-# ---- Footer ----
-st.markdown(
-    "<p style='text-align:center; color:gray; margin-top:30px;'>Built with ❤️ & VLMs</p>",
-    unsafe_allow_html=True,
-)
