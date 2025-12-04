@@ -48,7 +48,12 @@ def create_pdf(analysis_text, prompt_type, mode, model_name):
 
 # --- Sidebar Configuration ---
 with st.sidebar:
-    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxkZyV0ooGguTljRql__gv7VkKUB8qdfgeSA&s" width="50" style="border-radius: 10px;">
+    # Logo first
+    st.image(
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxkZyV0ooGguTljRql__gv7VkKUB8qdfgeSA&s",
+        width=50,
+        caption=None
+    )
     st.header("⚙️ Configuration")
     
     # 1. API Key Input
