@@ -121,7 +121,6 @@ fast_mode_prompt = (
 
 # --- Main App Interface ---
 
-# Hero Section (Cleaned up - No University Icon)
 st.markdown(
     """
     <div style='text-align: center; padding: 2rem 0; margin-bottom: 2rem;'>
@@ -135,18 +134,33 @@ st.markdown(
             Ensure the health of your ponds, lakes, and small water bodies with AI-driven insights. 
             Monitor water quality, detect algae risks, assess biodiversity, and get actionable recommendations.
         </p>
-        <ul style='text-align: left; display: inline-block; color: #555; font-size: 0.95rem; margin-top: 10px;'>
-            <li>Quick visual analysis & metrics for clarity, algae risk, and biodiversity</li>
-            <li>Detailed research-mode reports with botanical & ecological insights</li>
-            <li>Downloadable PDF reports for record keeping or study</li>
-            <li>Supports image upload or direct URL analysis</li>
-        </ul>
-        <p style='margin-top: 15px; font-weight: bold; color: #333; font-size: 1rem;'>
+        
+        <div style='display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 20px;'>
+            <div style='background-color: #f0f8ff; border-radius: 10px; padding: 15px; width: 220px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;'>
+                <strong>📊 Quick Metrics</strong>
+                <p style='margin:5px 0 0 0; font-size:0.9rem;'>Visual analysis for clarity, algae risk, and biodiversity</p>
+            </div>
+            <div style='background-color: #e6f7ff; border-radius: 10px; padding: 15px; width: 220px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;'>
+                <strong>🔬 Detailed Research</strong>
+                <p style='margin:5px 0 0 0; font-size:0.9rem;'>Academic insights on flora, fauna, and ecological balance</p>
+            </div>
+            <div style='background-color: #f0f8ff; border-radius: 10px; padding: 15px; width: 220px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;'>
+                <strong>📄 PDF Reports</strong>
+                <p style='margin:5px 0 0 0; font-size:0.9rem;'>Downloadable reports for documentation or study</p>
+            </div>
+            <div style='background-color: #e6f7ff; border-radius: 10px; padding: 15px; width: 220px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;'>
+                <strong>🌐 Image Input</strong>
+                <p style='margin:5px 0 0 0; font-size:0.9rem;'>Supports image upload or direct URL analysis</p>
+            </div>
+        </div>
+        
+        <p style='margin-top: 25px; font-weight: bold; color: #333; font-size: 1rem;'>
             Start by uploading a pond image or pasting its URL below ⬇️
         </p>
     </div>
     """, unsafe_allow_html=True
 )
+
 
 
 # --- Logic Gate ---
