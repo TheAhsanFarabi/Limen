@@ -27,7 +27,7 @@ def create_pdf(analysis_text, prompt_type, mode, model_name):
     # Metadata
     pdf.set_font("Helvetica", "I", 10)
     
-    # 🛡️ SANITIZATION FIX: Encode/Decode metadata to remove emojis from "🚀 Fast Mode", etc.
+    # 🛡️ SANITIZATION FIX: Encode/Decode metadata to remove emojis
     safe_model = model_name.encode('latin-1', 'replace').decode('latin-1')
     safe_strategy = prompt_type.encode('latin-1', 'replace').decode('latin-1')
     safe_mode = mode.encode('latin-1', 'replace').decode('latin-1')
@@ -48,7 +48,7 @@ def create_pdf(analysis_text, prompt_type, mode, model_name):
 
 # --- Sidebar Configuration ---
 with st.sidebar:
-    # Logo first
+    # Logo first (From your updated code)
     st.image(
         "https://www.uiu.ac.bd/wp-content/uploads/2023/10/header-logo.png",
         width=150,
@@ -58,12 +58,23 @@ with st.sidebar:
     
     # 1. API Key Input
     st.markdown("### 1. Credentials")
-    hf_token = st.text_input("Enter Hugging Face Token", type="password", help="Your HF Access Token")
-    st.link_button("🔑 Get HF API Key", "https://huggingface.co/settings/tokens")
+    
+    # Link to get token
+    st.markdown("[🔑 Get HF API Key](https://huggingface.co/settings/tokens)")
+    
+    # Persistent Input (Fixed to prevent disappearing on interaction)
+    hf_token = st.text_input(
+        "Enter Hugging Face Token", 
+        type="password", 
+        help="Your HF Access Token (Read/Write)"
+    )
+    
+    if hf_token:
+        st.success("Token detected! ✅")
     
     st.markdown("---")
     
-    # 2. Model Selection (Restored)
+    # 2. Model Selection
     st.markdown("### 2. AI Model")
     model_id = st.selectbox(
         "Select Vision Model:",
@@ -91,21 +102,21 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 4. Tips (Restored)
+    # 4. Tips
     st.info("💡 **Tip:** 'Fast Mode' uses strict JSON parsing for metrics. If it fails, try 'Research Mode' for a raw text analysis.")
 
 # --- Define Prompts ---
 
-# Research Mode Prompts (Textual)
+# Research Mode Prompts (Textual) - UPDATED to 200 words constraint
 research_prompts = {
     "General Health Check": 
-        "Analyze the overall environment. Format as: '## 1. Visual Observations' and '## 2. Scientific Recommendations'. Be detailed and academic.",
+        "Analyze the overall environment. Format as: '## 1. Visual Observations' and '## 2. Recommended Solutions'. Provide visual cues info and solutions in max 200 words.",
     "Water Quality & Turbidity": 
-        "Focus on water quality (turbidity, color). Format as: '## 1. Visual Observations' and '## 2. Remediation Protocols'. Be detailed and academic.",
+        "Focus on water quality (turbidity, color). Format as: '## 1. Visual Observations' and '## 2. Recommended Solutions'. Provide visual cues info and solutions in max 200 words.",
     "Vegetation & Algae Control": 
-        "Focus on flora. Format as: '## 1. Botanical Identification' and '## 2. Management Strategy'. Be detailed and academic.",
+        "Focus on flora. Format as: '## 1. Visual Observations' and '## 2. Recommended Solutions'. Provide visual cues info and solutions in max 200 words.",
     "Biodiversity & Wildlife Potential":
-        "Focus on fauna support. Format as: '## 1. Habitat Assessment' and '## 2. Ecological Enhancement'. Be detailed and academic."
+        "Focus on fauna support. Format as: '## 1. Visual Observations' and '## 2. Recommended Solutions'. Provide visual cues info and solutions in max 200 words."
 }
 
 # Fast Mode Prompt (JSON extraction)
@@ -120,7 +131,7 @@ fast_mode_prompt = (
 )
 
 # --- Main App Interface ---
-# Hero Section
+# Hero Section (Preserved from your code)
 st.markdown(
     """
     <div style='text-align: center; padding: 2rem 0; margin-bottom: 2rem;'>
@@ -146,10 +157,6 @@ st.markdown(
     </div>
     """, unsafe_allow_html=True
 )
-
-
-
-
 
 # --- Logic Gate ---
 if not hf_token:
