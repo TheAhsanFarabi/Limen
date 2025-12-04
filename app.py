@@ -113,7 +113,6 @@ st.markdown(
                 <p style='color: #666; margin-top: 5px;'>AI-Powered Aquatic Intelligence System</p>
             </div>
             
-            <img src="https://cdn-icons-png.flaticon.com/512/1087/1087815.png" width="70" style="opacity: 0.8;">
         </div>
     </div>
     """, unsafe_allow_html=True
