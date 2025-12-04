@@ -50,10 +50,18 @@ def create_pdf(analysis_text, prompt_type, mode, model_name):
 with st.sidebar:
     st.header("⚙️ Configuration")
     
-    # 1. API Key Input
-    st.markdown("### 1. Credentials")
-    hf_token = st.text_input("Enter Hugging Face Token", type="password", help="Your HF Access Token")
-    st.link_button("🔑 Get HF API Key", "https://huggingface.co/settings/tokens")
+   # Link to get token
+st.markdown("[🔑 Get HF API Key](https://huggingface.co/settings/tokens)")
+
+# Button to enter API key
+if st.button("Enter API Key"):
+    hf_token = st.text_input(
+        "Paste your Hugging Face Token here", 
+        type="password", 
+        help="Your HF Access Token"
+    )
+    if hf_token:
+        st.success("Token entered! ✅")
     
     st.markdown("---")
     
