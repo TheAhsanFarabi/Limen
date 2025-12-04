@@ -120,6 +120,7 @@ st.markdown(
     """
     <div style='text-align: center; padding: 2rem 0; margin-bottom: 2rem;'>
         <div style='display: flex; justify_content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
+            <img src="https://sustainability.uiu.ac.bd/wp-content/uploads/2021/10/UIU-Logo_Final-1-1024x351.png" width="50" style="border-radius: 10px;">
             <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="50" style="border-radius: 10px;">
             <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="50" style="border-radius: 10px;">
         </div>
