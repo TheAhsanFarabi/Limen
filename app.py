@@ -2,6 +2,7 @@ import os
 import base64
 import json
 import streamlit as st
+import mimetypes
 from huggingface_hub import InferenceClient
 from fpdf import FPDF
 
@@ -47,7 +48,7 @@ def create_pdf(analysis_text, prompt_type, mode, model_name):
 
 # --- Sidebar Configuration ---
 with st.sidebar:
-    # Logo
+    # Logo first (From your updated code)
     st.image(
         "https://www.uiu.ac.bd/wp-content/uploads/2023/10/header-logo.png",
         width=150,
@@ -57,8 +58,11 @@ with st.sidebar:
     
     # 1. API Key Input
     st.markdown("### 1. Credentials")
+    
+    # Link to get token
     st.markdown("[🔑 Get HF API Key](https://huggingface.co/settings/tokens)")
     
+    # Persistent Input (Fixed to prevent disappearing on interaction)
     hf_token = st.text_input(
         "Enter Hugging Face Token", 
         type="password", 
@@ -75,11 +79,13 @@ with st.sidebar:
     model_id = st.selectbox(
         "Select Vision Model:",
         [
+            "Qwen/Qwen3-VL-8B-Instruct",
             "Qwen/Qwen2.5-VL-72B-Instruct", 
             "Qwen/Qwen2-VL-7B-Instruct", 
             "meta-llama/Llama-3.2-11B-Vision-Instruct"
         ],
-        index=0
+        index=0,
+        help="Select the AI model architecture to use for analysis."
     )
 
     # 3. Focus Area (Strategy)
@@ -95,11 +101,13 @@ with st.sidebar:
     )
     
     st.markdown("---")
+    
+    # 4. Tips
     st.info("💡 **Tip:** 'Fast Mode' uses strict JSON parsing for metrics. If it fails, try 'Research Mode' for a raw text analysis.")
 
 # --- Define Prompts ---
 
-# Research Mode Prompts (Textual)
+# Research Mode Prompts (Textual) - UPDATED to 200 words constraint
 research_prompts = {
     "General Health Check": 
         "Analyze the overall environment. Format as: '## 1. Visual Observations' and '## 2. Recommended Solutions'. Provide visual cues info and solutions in max 200 words.",
@@ -123,151 +131,31 @@ fast_mode_prompt = (
 )
 
 # --- Main App Interface ---
-
-# 🎨 MODERN HERO SECTION (Updated)
+# Hero Section (Preserved from your code)
 st.markdown(
     """
-    <style>
-        .hero-container {
-            text-align: center;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-        }
-        .sdg-badges {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 1rem;
-        }
-        .sdg-img {
-            width: 60px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        .sdg-img:hover {
-            transform: scale(1.1);
-        }
-        .hero-title {
-            font-size: 3rem;
-            font-weight: 800;
-            margin: 0;
-            color: #007CF0; /* Fallback */
-            background: -webkit-linear-gradient(45deg, #007CF0, #00DFD8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .hero-subtitle {
-            color: #666;
-            font-size: 1.2rem;
-            margin-top: 10px;
-            font-weight: 500;
-        }
-        .hero-desc {
-            color: #555;
-            font-size: 1rem;
-            max-width: 700px;
-            margin: 15px auto;
-            line-height: 1.6;
-        }
-        /* Card Grid System */
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-            text-align: left;
-        }
-        .feature-card {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            border-color: #007CF0;
-        }
-        .card-icon {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            display: block;
-        }
-        .card-title {
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 5px;
-            display: block;
-        }
-        .card-text {
-            font-size: 0.9rem;
-            color: #666;
-            margin: 0;
-        }
-        /* Dark mode adjustment for Streamlit */
-        @media (prefers-color-scheme: dark) {
-            .feature-card {
-                background-color: #262730;
-                border-color: #444;
-            }
-            .card-title { color: #fff; }
-            .card-text { color: #ccc; }
-            .hero-desc { color: #ccc; }
-            .hero-subtitle { color: #aaa; }
-        }
-        .cta-text {
-            margin-top: 30px;
-            font-weight: 700;
-            color: #333;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-    </style>
-
-    <div class="hero-container">
-        <div class="sdg-badges">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" class="sdg-img" title="Clean Water and Sanitation">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" class="sdg-img" title="Life Below Water">
+    <div style='text-align: center; padding: 2rem 0; margin-bottom: 2rem;'>
+        <div style='display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 1rem;'>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Sustainable_Development_Goal_6.png" width="50" style="border-radius: 10px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Sustainable_Development_Goal_14.png" width="50" style="border-radius: 10px;">
         </div>
-
-        <h1 class="hero-title">Pond Ecosystem Analyzer</h1>
-        <p class="hero-subtitle">AI-Powered Aquatic Intelligence System</p>
-        <p class="hero-desc">
-            Secure the health of your water bodies with instant AI diagnostics. 
-            Monitor turbidity, algae risks, and biodiversity with a single upload.
+        <h1 style='margin:0; font-size: 2.8rem;'>🌊 Pond Ecosystem Analyzer</h1>
+        <p style='color: #666; margin-top: 5px; font-size: 1.1rem;'>AI-Powered Aquatic Intelligence System</p>
+        <p style='color: #444; font-size: 1rem; margin-top: 10px; max-width: 650px; margin-left: auto; margin-right: auto;'>
+            Ensure the health of your ponds, lakes, and small water bodies with AI-driven insights. 
+            Monitor water quality, detect algae risks, assess biodiversity, and get actionable recommendations.
         </p>
-
-        <div class="feature-grid">
-            <div class="feature-card">
-                <span class="card-icon">📊</span>
-                <span class="card-title">Instant Metrics</span>
-                <p class="card-text">Get real-time scores for water clarity, algae risk, and biodiversity health.</p>
-            </div>
-            <div class="feature-card">
-                <span class="card-icon">🔬</span>
-                <span class="card-title">Deep Research</span>
-                <p class="card-text">Receive detailed botanical and ecological insights powered by Vision AI.</p>
-            </div>
-            <div class="feature-card">
-                <span class="card-icon">📥</span>
-                <span class="card-title">PDF Export</span>
-                <p class="card-text">Generate and download professional PDF reports for record-keeping.</p>
-            </div>
-            <div class="feature-card">
-                <span class="card-icon">🔗</span>
-                <span class="card-title">Flexible Input</span>
-                <p class="card-text">Analyze via direct file upload or simply paste a valid image URL.</p>
-            </div>
-        </div>
-
-        <p class="cta-text">⬇️ Start by uploading a pond image below ⬇️</p>
+        <ul style='text-align: left; display: inline-block; color: #555; font-size: 0.95rem; margin-top: 10px;'>
+            <li>Quick visual analysis & metrics for clarity, algae risk, and biodiversity</li>
+            <li>Detailed research-mode reports with botanical & ecological insights</li>
+            <li>Downloadable PDF reports for record keeping or study</li>
+            <li>Supports image upload or direct URL analysis</li>
+        </ul>
+        <p style='margin-top: 15px; font-weight: bold; color: #333; font-size: 1rem;'>
+            Start by uploading a pond image or pasting its URL below ⬇️
+        </p>
     </div>
-    """,
-    unsafe_allow_html=True
+    """, unsafe_allow_html=True
 )
 
 # --- Logic Gate ---
@@ -304,7 +192,7 @@ with col1:
 with col2:
     st.subheader("📊 Analysis Configuration")
     
-    # Mode Selection
+    # Mode Selection (Moved to Main Area)
     analysis_mode = st.radio(
         "Select Analysis Mode:",
         ["🚀 Fast Mode (Metrics)", "🔬 Research Mode (Detailed)"],
