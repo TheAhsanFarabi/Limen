@@ -120,7 +120,7 @@ fast_mode_prompt = (
 )
 
 # --- Main App Interface ---
-
+# Hero Section
 st.markdown(
     """
     <div style='text-align: center; padding: 2rem 0; margin-bottom: 2rem;'>
@@ -160,6 +160,7 @@ st.markdown(
     </div>
     """, unsafe_allow_html=True
 )
+
 
 
 
